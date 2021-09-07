@@ -1,37 +1,39 @@
 <?php
 
 class Logger {
-  var $time;
+	var $time;
 
-  function __construct(){
-    $this->resetTS();
-  }
+	function __construct(){
+		$this->resetTS();
+	}
 
-  function resetTS(){
-    $this->time = $this->ts();
-    return $this;
-  }
+	function resetTS(){
+		$this->time = $this->ts();
+		return $this;
+	}
 
-  function log($msg){
-    print $msg;
-    return $this;
-  }
-  function logn($msg = ""){
-    return $this->log("$msg\n");
-  }
+	function log($msg){
+		print $msg;
+		return $this;
+	}
 
-  function logTS($msg = ""){
-    return $this->log($msg.$this->formatTS($this->time, $this->ts()));
-  }
-  function logTSn($msg = ""){
-    return $this->logn($msg.$this->formatTS($this->time, $this->ts()));
-  }
+	function logn($msg = ""){
+		return $this->log("$msg\n");
+	}
 
-  function ts(){
-    return microtime(true);
-  }
+	function logTS($msg = ""){
+		return $this->log($msg.$this->formatTS($this->time, $this->ts()));
+	}
 
-  function formatTS($start_time, $end_time){
-    return print_time($start_time, $end_time);
-  }
+	function logTSn($msg = ""){
+		return $this->logn($msg.$this->formatTS($this->time, $this->ts()));
+	}
+
+	function ts(){
+		return microtime(true);
+	}
+
+	function formatTS($start_time, $end_time){
+		return print_time($start_time, $end_time);
+	}
 }

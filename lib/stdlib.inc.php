@@ -6,34 +6,28 @@ function dprint($msg) {
 	}
 }
 
-function save_file($id, $save_path)
-{
+function save_file($id, $save_path){
 	$some_file = isset($_FILES[$id]) ? $_FILES[$id] : array();
 
-	if(!$some_file)
-	{
+	if(!$some_file){
 		return false;
 	}
 
-	if(!($f_in = fopen($some_file['tmp_name'], 'r')))
-	{
+	if(!($f_in = fopen($some_file['tmp_name'], 'r'))){
 		print "Cannot open uploaded file!";
 		return false;
 	}
 
-	if(!($f_out = fopen($save_path, 'w')))
-	{
+	if(!($f_out = fopen($save_path, 'w'))){
 		print "Cannot save uploaded file!";
 		fclose($f_in);
 		return false;
 	}
 
-	while(!feof($f_in))
-	{
+	while(!feof($f_in)){
 		$ip = trim(fgets($f_in));
 		$line = ip2long($ip);
-		if(($line == '4294967295') || !$ip)
-		{
+		if(($line == '4294967295') || !$ip){
 			continue;
 		}
 		fputs($f_out, "$line\n");
@@ -42,22 +36,17 @@ function save_file($id, $save_path)
 	fclose($f_out);
 
 	return $some_file['type'];
-} // save_file
+}
 
-function read_zip($f_name)
-{
+function read_zip($f_name){
 	$tmp = tempnam('', 'ip2c');
-	if(!($f_out = fopen($tmp, 'w')))
-	{
+	if(!($f_out = fopen($tmp, 'w'))){
 		print "Cannot create temporary file!";
 	}
 
-	if($f_out && ($zip = zip_open($f_name)))
-	{
-		while($zip_entry = zip_read($zip))
-		{
-			if(zip_entry_open($zip, $zip_entry, "r"))
-			{
+	if($f_out && ($zip = zip_open($f_name))){
+		while($zip_entry = zip_read($zip)){
+			if(zip_entry_open($zip, $zip_entry, "r")){
 				$buf = zip_entry_read($zip_entry, zip_entry_filesize($zip_entry));
 				zip_entry_close($zip_entry);
 				fputs($f_out, $buf);
@@ -66,31 +55,28 @@ function read_zip($f_name)
 		fclose($f_out);
 		zip_close($zip);
 		return $tmp;
-	} else
+	} else {
 		return false;
+	}
 }
 
-function microtime_float()
-{
+function microtime_float(){
 	return microtime(true);
-	// list($usec, $sec) = explode(" ", microtime());
-	// return ((float)$usec + (float)$sec);
 }
 
-function mt() {
+function mt(){
 	return microtime_float();
 }
 
-function mt_start() {
+function mt_start(){
 	$GLOBALS['__TS'] = mt();
 }
 
-function mt_print() {
+function mt_print(){
 	print print_time($GLOBALS['__TS']);
 }
 
-function print_time($start_time, $end_time = false)
-{
+function print_time($start_time, $end_time = false){
 	if(!$end_time){
 		$end_time = mt();
 	}

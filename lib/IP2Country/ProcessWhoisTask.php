@@ -4,7 +4,7 @@ require_once('Logger.php');
 
 class ProcessWhoisTask extends Threaded {
 	private $db;
-  private $logger;
+	private $logger;
 	//private $state;
 	private $data = [];
 	private $completed = false;

@@ -10,9 +10,9 @@ class CompactDBTask extends Threaded {
 	private $logger;
 
 	public function __construct($data){
-			$this->db = $data['db'];
-			$this->datain = $data['datain'];
-			$this->dataout = $data['dataout'];
+		$this->db = $data['db'];
+		$this->datain = $data['datain'];
+		$this->dataout = $data['dataout'];
 	}
 
 	public function run() {
