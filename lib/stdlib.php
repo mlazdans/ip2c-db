@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 function dprint($msg) {
 	if(!empty($GLOBALS['debug'])) {
 		print $msg;
@@ -25,7 +27,7 @@ function save_file($id, $save_path){
 	}
 
 	while(!feof($f_in)){
-		$ip = trim(fgets($f_in));
+		$ip = trim((string)fgets($f_in));
 		$line = ip2long($ip);
 		if(($line == '4294967295') || !$ip){
 			continue;
@@ -122,3 +124,47 @@ function delfiles($pattern){
 		unlink($filename);
 	}
 }
+
+function download_db($db, $CONFIG){
+	$ext = pathinfo($db, PATHINFO_EXTENSION);
+	if($ext == 'gz'){
+		$dbout = $CONFIG['whoisdata_root'].DIRECTORY_SEPARATOR.pathinfo($db, PATHINFO_FILENAME);
+		$fopenf = "gzopen";
+	} else {
+		$dbout = $CONFIG['whoisdata_root'].DIRECTORY_SEPARATOR.basename($db);
+		$fopenf = "fopen";
+	}
+
+	print "Starting downloading: $db...\n";
+
+	if(!is_writable($dbout)){
+		print "Not writable: $dbout\n";
+		return false;
+	}
+
+	if($f = $fopenf($db, "rb")){
+		if($fo = fopen($dbout, "wb")){
+			while(!feof($f)){
+				$data = fread($f, 4096);
+				fwrite($fo, $data);
+			}
+			fclose($fo);
+		}
+		fclose($f);
+		return true;
+	}
+
+	return false;
+}
+
+function save_processed($key, $data){
+	if($f = fopen("$key.processed", "w")){
+		foreach($data as $v)
+			fputs($f, "$v\n");
+
+		return fclose($f);
+	}
+
+	return false;
+}
+
