@@ -1,6 +1,6 @@
 <?php
 
-require_once('Range.php');
+declare(strict_types = 1);
 
 class CountryRange extends Range {
 	var $iso;

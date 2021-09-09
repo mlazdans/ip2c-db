@@ -1,7 +1,6 @@
 <?php
 
-require_once('RangeDB.php');
-require_once('CountryRange.php');
+declare(strict_types = 1);
 
 class CountryRangeDB extends RangeDB {
 

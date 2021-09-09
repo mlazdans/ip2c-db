@@ -1,9 +1,8 @@
 <?php
 
-require('Logger.php');
-require('RangeDB.php');
+declare(strict_types = 1);
 
-class CompactDBTask extends Threaded {
+class CompactDB {
 	private $db;
 	private $datain;
 	private $dataout;
@@ -17,6 +16,7 @@ class CompactDBTask extends Threaded {
 
 	public function run() {
 		$c = new RangeDB($this->db);
+
 		$this->logger = new Logger;
 		$this->logger->logn("Start processing ($this->db)");
 		$c->load($this->datain);
