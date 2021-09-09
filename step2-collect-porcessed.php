@@ -1,15 +1,16 @@
 <?php
 
-require_once('config.php');
-require_once('lib/console.inc.php');
-require_once('IP2Country/CountryRangeDB.php');
+declare(strict_types = 1);
+
+require_once('boot.php');
+require_once('console.php');
 
 $countries = array();
 foreach(glob($CONFIG['whoisdata_root'].DIRECTORY_SEPARATOR."*.processed") as $database){
 	print "Loading: $database...";
 	$f = fopen($database, 'r');
 	while(!feof($f)){
-		if(preg_match("/(..),(.*)/", fgets($f), $m)){
+		if(preg_match("/(..),(.*)/", (string)fgets($f), $m)){
 			$countries[$m[1]][] = $m[2];
 		}
 	}

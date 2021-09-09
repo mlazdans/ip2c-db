@@ -1,9 +1,11 @@
 <?php
 
-require_once('config.php');
-require_once('lib/console.inc.php');
+declare(strict_types = 1);
 
-$dbs = array(
+require_once('boot.php');
+require_once('console.php');
+
+$dbs = [
 	'ftp://ftp.ripe.net/ripe/dbase/split/ripe.db.inetnum.gz',
 	'ftp://ftp.ripe.net/pub/stats/afrinic/delegated-afrinic-latest',
 	'ftp://ftp.ripe.net/pub/stats/apnic/delegated-apnic-latest',
@@ -14,45 +16,38 @@ $dbs = array(
 	'ftp://ftp.arin.net/pub/rr/arin.db.gz',
 	'ftp://ftp.afrinic.net:/dbase/afrinic.db.gz',
 	'ftp://ftp.apnic.net/public/apnic/whois/apnic.db.inetnum.gz',
-);
+];
 
-$allComplete = true;
+$pool = new TPool(8, 'boot.php');
+
+$host_db = [];
 foreach($dbs as $db){
-	$ext = pathinfo($db, PATHINFO_EXTENSION);
-	if($ext == 'gz'){
-		$dbout = $CONFIG['whoisdata_root'].DIRECTORY_SEPARATOR.pathinfo($db, PATHINFO_FILENAME);
-		$fopenf = "gzopen";
-	} else {
-		$dbout = $CONFIG['whoisdata_root'].DIRECTORY_SEPARATOR.basename($db);
-		$fopenf = "fopen";
+	$pi = parse_url($db);
+	$host = $pi['host'];
+
+	if(!isset($host_db[$host])){
+		$host_db[$host] = [];
 	}
 
-/*
-	if(file_exists($dbout)){
-		print "File exists: ($dbout), skipping\n";
-		continue;
-	}
-*/
+	$host_db[$host][] = $db;
+}
 
-	print "Downloading: ($db) to ($dbout)...";
-	if($f = $fopenf($db, "rb")){
-		if($fo = fopen($dbout, "wb")){
-			while(!feof($f)){
-				$data = fread($f, 4096);
-				fwrite($fo, $data);
-			}
-			fclose($fo);
-		}
-		fclose($f);
-		print "done\n";
-	} else {
-		$allComplete = false;
-		print "FAIL\n";
+foreach($host_db as $host=>$dbs){
+	$pool->submit(function($dbs, $CONFIG){
+		foreach($dbs as $db)
+			if(!download_db($db, $CONFIG))
+				return false;
+
+		return true;
+	}, [$dbs, $CONFIG]);
+}
+
+$pool->shutdown();
+
+foreach($pool->jobs as $job){
+	if(!$job->future->value()){
+		exit(1);
 	}
 }
 
-if($allComplete){
-	exit(0);
-} else {
-	exit(1);
-}
+exit(0);

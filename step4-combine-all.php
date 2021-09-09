@@ -1,9 +1,9 @@
 <?php
 
-require_once('config.php');
-require_once('lib/console.inc.php');
-require_once('IP2Country/RangeDB.php');
-require_once('IP2Country/CountryRangeDB.php');
+declare(strict_types = 1);
+
+require_once('boot.php');
+require_once('console.php');
 
 $db_patt = $CONFIG['tempout_root'].DIRECTORY_SEPARATOR."*.db";
 
