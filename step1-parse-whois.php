@@ -11,18 +11,33 @@ declare(strict_types = 1);
 require_once('boot.php');
 require_once('console.php');
 
-$O = getopt("w:d:o:");
-if(!isset($O['w']) && !isset($O['d'])){
-	print "\nUsage: $argv[0] [-w <whois_database> | -d <delegated_database>]\n";
+$O = getopt("w:d:t:h");
+
+function usage(){
+	global $argv;
+
+	print "\nUsage: $argv[0] [-w <whois_database> | -d <delegated_database>] [-t <thred_count>] [-h]\n";
 	print "\n";
 	print "\t-w WHOIS database to load, accepts multiple databases.\n";
 	print "\t-d delegated database file, accepts multiple databases.\n";
-	//print "\t-o output file for all processed databases.\n";
+	print "\t-t thread count (>1)\n";
+	print "\t-h help\n";
 	print "\n";
 	print "Example: $argv[0] -w ripe.db.inetnum -d delegated-ripencc-latest -o combined.db\n";
 	print "\n";
 	print "Processed databases will be saved with .processed added to original name\n";
-	exit;
+
+	exit(1);
+}
+
+if((empty($O['w']) && empty($O['d'])) || isset($O['h']))
+	usage();
+
+if(isset($O['t'])){
+	if(($THREAD_COUNT = (int)$O['t']) < 2)
+		usage();
+} else {
+	$THREAD_COUNT = 0;
 }
 
 $whois_databases = isset($O['w']) ? $O['w'] : [];
@@ -37,24 +52,41 @@ if(!is_array($delegated_databases)){
 	$delegated_databases = [$delegated_databases];
 }
 
-delfiles($CONFIG['whoisdata_root'].DIRECTORY_SEPARATOR."*.processed");
+# $type = [delegated|whois]
+$process_db = function(string $db, string $type){
+	if($type == 'delegated'){
+		$processor = new ProcessDelegated($db);
+	} elseif($type == 'whois'){
+		$processor = new ProcessWhois($db);
+	} else {
+		return false;
+	}
 
-$pool = new TPool(10, 'boot.php');
+	return save_processed($db, $processor->run());
+};
+
+if($THREAD_COUNT)
+	$pool = new TPool($THREAD_COUNT, 'boot.php');
 
 foreach($delegated_databases as $db){
-	$pool->submit(function($db){
-		$processor = new ProcessDelegated($db);
-
-		return save_processed($db, $processor->run());
-	}, [$db]);
+	if($THREAD_COUNT)
+		$pool->submit($process_db, [$db, 'delegated']);
+	elseif(!$process_db($db, 'delegated'))
+		exit(1);
 }
 
 foreach($whois_databases as $db){
-	$pool->submit(function($db){
-		$processor = new ProcessWhois($db);
-
-		return save_processed($db, $processor->run());
-	}, [$db]);
+	if($THREAD_COUNT)
+		$pool->submit($process_db, [$db, 'whois']);
+	elseif(!$process_db($db, 'whois'))
+		exit(1);
 }
 
-$pool->shutdown();
+if($THREAD_COUNT){
+	$pool->shutdown();
+	foreach($pool->jobs as $job)
+		if(!$job->future->value())
+			exit(1);
+}
+
+exit(0);
