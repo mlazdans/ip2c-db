@@ -54,7 +54,7 @@ $ROOT = $O['r'];
 
 if(!is_writable($ROOT)){
 	print "Not writable: $ROOT\n";
-	exit(-1);
+	exit(1);
 }
 
 if(isset($O['t'])){
@@ -104,7 +104,7 @@ foreach($host_db as $host=>$dbs){
 	if($THREAD_COUNT)
 		$pool->submit($download_host_dbs, [$dbs, $ROOT]);
 	elseif(!$download_host_dbs($dbs, $ROOT))
-		exit(-1);
+		exit(1);
 }
 
 if($THREAD_COUNT){
