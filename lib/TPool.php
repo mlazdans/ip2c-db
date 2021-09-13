@@ -2,10 +2,9 @@
 
 declare(strict_types = 1);
 
-use parallel\Runtime;
-
 class TPool {
 	var $thread_count;
+	var $threads_running = 0;
 
 	/** @var Runtime[] $workers */
 	var $workers = [];
@@ -20,21 +19,22 @@ class TPool {
 
 	function __construct(int $thread_count, string $bootstrap = null){
 		$this->thread_count = $thread_count;
-
-		for($i = 0; $i < $thread_count; $i++){
-			$this->workers[$i] = new Runtime($bootstrap);
-			// $this->set_avail_worker($this->workers[$i]);
-			$this->set_avail_worker($i);
-		}
+		if($bootstrap)
+			\parallel\bootstrap($bootstrap);
+		// for($i = 0; $i < $thread_count; $i++){
+		// 	$this->workers[$i] = new Runtime($bootstrap);
+		// 	// $this->set_avail_worker($this->workers[$i]);
+		// 	$this->set_avail_worker($i);
+		// }
 	}
 
-	function get_avail_worker(){
-		return array_shift($this->workers_avail);
-	}
+	// function get_avail_worker(){
+	// 	return array_shift($this->workers_avail);
+	// }
 
-	function set_avail_worker($worker){
-		return array_push($this->workers_avail, $worker);
-	}
+	// function set_avail_worker($worker){
+	// 	return array_push($this->workers_avail, $worker);
+	// }
 
 	function submit(Closure $f, array $o = []){
 		// $this->jobs[] = $this->workers[0]->run($f, $o);
@@ -59,20 +59,22 @@ class TPool {
 						// print "Done job\n";
 						$job->done = true;
 						$job->running = false;
-						$this->set_avail_worker($job->worker);
+						$this->threads_running--;
+						// $this->set_avail_worker($job->worker);
 					}
-				} elseif(($workerId = $this->get_avail_worker()) !== null){
-					// print "Got worker!\n";
+				} elseif($this->threads_running < $this->thread_count){
+					$this->threads_running++;
+					// print "Got worker $this->threads_running!\n";
 					$job->running = true;
-					$job->worker = $workerId;
-					$job->future = $this->workers[$workerId]->run($job->job, $job->job_params);
+					$job->worker = $this->threads_running;
+					$job->future = \parallel\run($job->job, $job->job_params);
 				} else {
 					// print "No avail workers\n";
 					break;
 				}
 			}
 			// print "Sleep\n";
-			sleep(1);
+			usleep(500000); // 0.5 sec
 		} while($jobs);
 	}
 }
