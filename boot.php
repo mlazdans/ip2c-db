@@ -27,5 +27,4 @@ $include_path = array_unique(array_merge($LIBS, explode(PATH_SEPARATOR, ini_get(
 ini_set('include_path', join(PATH_SEPARATOR, $include_path));
 
 require_once('lib/stdlib.php');
-require_once('config.php');
 
