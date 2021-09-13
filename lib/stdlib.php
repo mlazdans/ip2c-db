@@ -135,3 +135,8 @@ function save_processed($key, $data){
 
 	return false;
 }
+
+# https://stackoverflow.com/a/62248418/10973173
+function get_total_cpu_cores() {
+	return (int) ((PHP_OS_FAMILY == 'Windows')?(getenv("NUMBER_OF_PROCESSORS")+0):substr_count(file_get_contents("/proc/cpuinfo"),"processor"));
+}
