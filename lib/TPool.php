@@ -74,7 +74,7 @@ class TPool {
 				}
 			}
 			// print "Sleep\n";
-			usleep(500000); // 0.5 sec
+			usleep(50000); // 0.05 sec
 		} while($jobs);
 
 		return true;
