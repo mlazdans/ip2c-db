@@ -43,7 +43,7 @@ class ProcessWhois {
 				}
 			}
 
-		return feof($f) ? false : $state;
+		return feof($f) && !$state ? false : $state;
 	}
 
 	public function run() {
