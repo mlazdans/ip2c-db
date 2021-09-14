@@ -10,142 +10,109 @@ class ProcessWhois {
 		$this->db = $db;
 	}
 
+	function fetch_record($f){
+		$state = [];
+		$key = '';
+		while($line = fgets($f))
+			if($line == "\n")
+				return $state;
+			elseif(($line[0] == '#') || ($line[0] == '%') || ($line[0] == '+') || ($line == 'EOF'))
+				continue;
+			elseif(preg_match('/^([a-z0-9\-]+):(.*)$/i', $line, $m)){
+				$key = strtolower($m[1]);
+				$val = trim($m[2]);
+				if(isset($state[$key])){
+					if(is_array($state[$key])){
+						$state[$key][] = $val;
+					} else {
+						$state[$key] = [$state[$key], $val];
+					}
+				} else {
+					$state[$key] = $val;
+				}
+			} else {
+				if(isset($state[$key])){
+					if(is_array($state[$key])){
+						$state[$key][] = trim($line);
+					} else {
+						$state[$key] = [$state[$key], trim($line)];
+					}
+				} else {
+					print "key not set ($key), line ($line)\n";
+					print_r($state);
+				}
+			}
+
+		return feof($f) ? false : $state;
+	}
+
 	public function run() {
 		$logger = new Logger;
 		$logger->logn("Start processing ($this->db)");
-		$commandLine = 'grep -e "^inetnum:" -e "^country:" -e "^netname:" '.$this->db;
 
-		$pipes = [];
-		$descriptorspec = [["pipe", "r"], ["pipe", "w"]];
+		$f = fopen($this->db, "r");
 
-		$state = $this->defaultstate();
+		while(($record = $this->fetch_record($f)) !== false)
+			$this->save_state($record);
 
-		$r = proc_open($commandLine, $descriptorspec, $pipes);
-		while(!feof($pipes[1])){
-			$state = $this->processor($state, fgets($pipes[1]));
-		}
-		proc_close($r);
-
-		# save last state
-		$this->save_state($state);
+		fclose($f);
 
 		$logger->logTSn("Done processing ($this->db) in ");
 
 		return $this->data;
 	}
 
-	function save_state($state){
-		if($state['error'] || $state['saved']){
+	function save_state($record){
+		if(!isset($record['inetnum']))
 			return;
-		}
 
-		$skipBlocks =
-			'AFRINIC-CIDR-BLOCK|APNIC-AP-ERX|ARIN-CIDR-BLOCK|ERX-NETBLOCK|'.
-			'IANA-BLOCK|IANA-NETBLOCK|LACNIC-CIDR-BLOCK|RIPE-CIDR-BLOCK|'.
-			'IETF-RESERVED-ADDRESS-BLOCK|IANA-BLK|APNIC-LABS';
+		if(!isset($record['country']))
+			return;
 
-		if(preg_match("/$skipBlocks/", $state['netname'])){
+		if(is_array($record['country']))
+			$country = $record['country'][0];
+		else
+			$country = $record['country'];
+
+		$country = trim(explode("#", $country)[0]);
+
+		$skipBlocks = 'AFRINIC-CIDR-BLOCK|APNIC-AP-ERX|ARIN-CIDR-BLOCK|ERX-NETBLOCK|'.
+		'IANA-BLOCK|IANA-NETBLOCK|LACNIC-CIDR-BLOCK|RIPE-CIDR-BLOCK|'.
+		'IETF-RESERVED-ADDRESS-BLOCK|IANA-BLK|APNIC-LABS';
+
+		if(isset($record['netname']) && preg_match("/$skipBlocks/", $record['netname'])){
 			// print "Skip block ($state[ipStart] - $state[ipEnd])\n";
 			//trigger_error("Skipping bad block ($state[ipStart] - $state[ipEnd])");
 			return;
 		}
 
-		if(count($state['countries']) > 1){
-			$state['countries'] = array_unique($state['countries']);
-		}
+		$range = array_map('trim', explode('-', $record['inetnum']));
 
-		if(count($state['countries']) > 1){
-			//$c = join(",", $state['countries']);
-			//trigger_error("Skip countries > 1 ($c) for ($state[ipStart] - $state[ipEnd])");
-			return;
-		}
-
-		if(!$state['countries']){
-			//trigger_error("No countries for ($state[ipStart] - $state[ipEnd])");
-			return;
-		}
-
-		//foreach($state['countries'] as $c){
-		$c = $state['countries'][0];
-		if($c == 'EU'){
-			return;
-		}
-		if($c == 'UNITED STATES'){
-			$c = 'US';
-		}
-
-		$state['saved'] = true;
-		$this->data[] = "$c,$state[ipStartLong],$state[ipEndLong]";
-
-		return $state;
-		//fputs($f, "$c,$state[ipStartLong],$state[ipEndLong]\n");
-	}
-
-	function processor($state, $line){
-		if(!$line)
-			return $state;
-
-		if(!preg_match('/^(inetnum|country|netname):(.*)$/i', $line, $m)){
-			trigger_error("Unexpected format ($line)", E_USER_ERROR);
-		}
-		$field = trim($m[1]);
-		$data = trim($m[2]);
-
-		if($field == 'country'){
-			$state['countries'][] = strtoupper(substr($data,0,2));
-			return $state;
-
-		}
-		if($field == 'netname'){
-			$state['netname'] = $data;
-			return $state;
-		}
-
-		if($field == 'inetnum'){
-			if($state['counter']){
-				$this->save_state($state);
-				$state = $this->defaultstate();
-			}
-			$state['counter']++;
-
-			$range = array_map('trim', explode('-', trim($data)));
-			if(count($range) != 2){
-				trigger_error("Unexpected inetnum format ($data)");
-				$state['error'] = true;
-				return $state;
-			}
+		if(count($range) == 1){
+			# Process CIDR: 24.232.32.4/30
+			list($ip_start_long, $ip_end_long) = cidrToRange($range[0]);
+			$ip_start = long2ip($ip_start_long);
+			$ip_end = long2ip($ip_end_long);
+		} elseif(count($range) == 2){
+			# Process range: 202.127.160.0 - 202.127.167.255
 			list($ip_start, $ip_end) = $range;
-			$long_start = ip2long($ip_start);
-			$long_end = ip2long($ip_end);
-
-			if(($long_start===FALSE) || ($long_end===FALSE)){
-				trigger_error("Incorrect IP address ($ip_start, $ip_end)");
-				$state['error'] = true;
-				return $state;
-			}
-
-			$newState = array(
-				'ipStart'=>$ip_start,
-				'ipEnd'=>$ip_end,
-				'ipStartLong'=>$long_start,
-				'ipEndLong'=>$long_end,
-			);
-			return array_merge($state, $newState);
+			$ip_start_long = ip2long($ip_start);
+			$ip_end_long = ip2long($ip_end);
+		} else {
+			print "Unexpected inetnum format ({$record['inetnum']})\n";
+			return;
 		}
-	}
 
-	public function defaultState(){
-		return array(
-			'saved'=>false,
-			'counter'=>0,
-			'error'=>false,
-			'countries'=>[],
-			'netname'=>'',
-			'ipStart'=>'',
-			'ipEnd'=>'',
-			'ipStartLong'=>0,
-			'ipEndLong'=>0,
-		);
-	}
+		if(($ip_start_long === false) || ($ip_end_long === FALSE)){
+			print "Incorrect IP address ($ip_start, $ip_end) for ({$record['inetnum']})";
+			return;
+		}
 
+		if(!($c = country_rule($country)))
+			return;
+
+		$this->data[] = "$c,$ip_start_long,$ip_end_long";
+
+		return true;
+	}
 }
