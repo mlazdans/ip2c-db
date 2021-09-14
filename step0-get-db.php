@@ -43,7 +43,7 @@ $dbs = [
 
 	'ftp://ftp.afrinic.net/dbase/afrinic.db.gz',
 	'ftp://ftp.apnic.net/public/apnic/whois/apnic.db.inetnum.gz',
-	'ftp://ftp.arin.net/pub/rr/arin.db.gz',
+	// 'ftp://ftp.arin.net/pub/rr/arin.db.gz', # No country data here
 	'ftp://ftp.lacnic.net/lacnic/dbase/lacnic.db.gz',
 	'ftp://ftp.ripe.net/ripe/dbase/split/ripe.db.inetnum.gz',
 ];
