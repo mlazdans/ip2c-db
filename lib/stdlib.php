@@ -136,6 +136,30 @@ function save_processed($key, $data){
 	return false;
 }
 
+# TODO: logger
+function download_db($db, $root){
+	$ext = pathinfo($db, PATHINFO_EXTENSION);
+	if($ext == 'gz'){
+		$dbout = $root.DIRECTORY_SEPARATOR.pathinfo($db, PATHINFO_FILENAME);
+		$fopenf = "gzopen";
+	} else {
+		$dbout = $root.DIRECTORY_SEPARATOR.basename($db);
+		$fopenf = "fopen";
+	}
+
+	print "Starting downloading: $db...\n";
+	if(($f = $fopenf($db, "rb")) === false)
+		return false;
+
+	if(($fo = fopen($dbout, "wb")) === false)
+		return false;
+
+	while(!feof($f) && (($data = fread($f, 4096)) !== false))
+		fwrite($fo, $data);
+
+	return fclose($fo) && fclose($f);
+}
+
 # https://stackoverflow.com/a/62248418/10973173
 function get_total_cpu_cores() {
 	return (int) ((PHP_OS_FAMILY == 'Windows')?(getenv("NUMBER_OF_PROCESSORS")+0):substr_count(file_get_contents("/proc/cpuinfo"),"processor"));

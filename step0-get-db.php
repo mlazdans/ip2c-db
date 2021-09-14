@@ -19,38 +19,10 @@ function usage(){
 	exit(1);
 }
 
-# TODO: logger
-function download_db($db, $root){
-	$ext = pathinfo($db, PATHINFO_EXTENSION);
-	if($ext == 'gz'){
-		$dbout = $root.DIRECTORY_SEPARATOR.pathinfo($db, PATHINFO_FILENAME);
-		$fopenf = "gzopen";
-	} else {
-		$dbout = $root.DIRECTORY_SEPARATOR.basename($db);
-		$fopenf = "fopen";
-	}
-
-	print "Starting downloading: $db...\n";
-
-	if($f = $fopenf($db, "rb")){
-		if($fo = fopen($dbout, "wb")){
-			while(!feof($f)){
-				$data = fread($f, 4096);
-				fwrite($fo, $data);
-			}
-			fclose($fo);
-		}
-		fclose($f);
-		return true;
-	}
-
-	return false;
-}
-
 if(empty($O['r']) || isset($O['h']))
 	usage();
 
-$ROOT = $O['r'];
+$ROOT = realpath($O['r'].DIRECTORY_SEPARATOR);
 
 if(!is_writable($ROOT)){
 	print "Not writable: $ROOT\n";
@@ -105,11 +77,9 @@ foreach($host_db as $host=>$dbs){
 		exit(1);
 }
 
-if($THREAD_COUNT){
-	$pool->shutdown();
+if($THREAD_COUNT && $pool->shutdown())
 	foreach($pool->jobs as $job)
 		if(!$job->future->value())
 			exit(1);
-}
 
 exit(0);
