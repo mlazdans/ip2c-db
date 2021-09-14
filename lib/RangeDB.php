@@ -7,7 +7,7 @@ class RangeDB {
 	var $deleted = 0;
 	var $name = '';
 
-	function __construct($name) {
+	function __construct(string $name) {
 		$this->name = $name;
 		$this->ranges = new \Ds\Vector;
 	}
@@ -52,13 +52,26 @@ class RangeDB {
 		fclose($f);
 	}
 
+	function getWithMerges() {
+		//$this->sort("Start");
+		foreach($this->ranges as $Range){
+			yield "$Range,$Range->merges";
+			// $data[] = "$Range,$Range->merges";
+		}
+		// return $data??[];
+	}
+
 	function saveWithMerges($file) {
 		//$this->sort("Start");
-		$f = fopen($file, "w");
-		foreach($this->ranges as $Range){
-			fputs($f, "$Range,$Range->merges\n");
-		}
-		fclose($f);
+		if(($f = fopen($file, "w")) === false)
+			return false;
+
+		foreach($this->getWithMerges() as $line)
+			fputs($f, "$line\n");
+		// foreach($this->ranges as $Range){
+		// 	fputs($f, "$Range,$Range->merges\n");
+		// }
+		return fclose($f);
 	}
 
 	function append($item) {
