@@ -1,63 +1,82 @@
 <?php
 
+declare(strict_types = 1);
+
 # {afrinic,apnic,arin,iana,lacnic,ripencc}
 # https://www.ripe.net/manage-ips-and-asns/db/support/documentation/ripe-database-documentation/rpsl-object-types/4-2-descriptions-of-primary-objects/4-2-4-description-of-the-inetnum-object
 
 # TODO: delegated vs inetnum coverage
 # TODO: stats for skipped blocks: ProcessDelegatedTask -> skipped ipv4; ProcessWhoisTask -> skipped netnames
 
-require_once('config.php');
-require_once('lib/console.inc.php');
-require_once('lib/IP2Country/ProcessWhoisTask.php');
-require_once('lib/IP2Country/ProcessDelegatedTask.php');
+require_once('boot.php');
+require_once('console.php');
 
-$O = getopt("w:d:o:");
-if(!isset($O['w']) && !isset($O['d'])){
-	print "\nUsage: $argv[0] [-w <whois_database> | -d <delegated_database>]\n";
+$O = getopt("w:d:t:h");
+
+function usage(){
+	global $argv;
+
+	print "\nUsage: $argv[0] [-w <whois_database> | -d <delegated_database>] [-t <thred_count>] [-h]\n";
 	print "\n";
 	print "\t-w WHOIS database to load, accepts multiple databases.\n";
 	print "\t-d delegated database file, accepts multiple databases.\n";
-	//print "\t-o output file for all processed databases.\n";
+	print "\t-t thread count (>1)\n";
+	print "\t-h help\n";
 	print "\n";
 	print "Example: $argv[0] -w ripe.db.inetnum -d delegated-ripencc-latest -o combined.db\n";
 	print "\n";
 	print "Processed databases will be saved with .processed added to original name\n";
-	exit;
+
+	exit(1);
 }
 
-$whois_databases = isset($O['w']) ? $O['w'] : array();
-$delegated_databases = isset($O['d']) ? $O['d'] : array();
-$output_database = isset($O['o']) ? $O['o'] : array();
+if((empty($O['w']) && empty($O['d'])) || isset($O['h']))
+	usage();
 
-if(!is_array($whois_databases)){
-	$whois_databases = array($whois_databases);
-}
+$THREAD_COUNT = 0;
+if(isset($O['t']))
+	if(($THREAD_COUNT = (int)$O['t']) < 2)
+		$THREAD_COUNT = 0;
 
-if(!is_array($delegated_databases)){
-	$delegated_databases = array($delegated_databases);
-}
+$whois_databases = isset($O['w']) ? $O['w'] : [];
+$delegated_databases = isset($O['d']) ? $O['d'] : [];
+$output_database = isset($O['o']) ? $O['o'] : [];
 
-delfiles($CONFIG['whoisdata_root'].DIRECTORY_SEPARATOR."*.processed");
+if(!is_array($whois_databases))
+	$whois_databases = [$whois_databases];
 
-class WhoisDBCollector extends Threaded{
-	public function addData($key, $data){
-		$f = fopen("$key.processed", "w");
-		foreach($data as $v){
-			fputs($f, "$v\n");
-		}
-		fclose($f);
-	}
-}
+if(!is_array($delegated_databases))
+	$delegated_databases = [$delegated_databases];
 
-print "Start processing WHOIS data\n";
-$collector = new WhoisDBCollector();
+$process_db = function(string $db, string $type){
+	if($type == 'delegated')
+		$processor = new ProcessDelegated($db);
+	elseif($type == 'whois')
+		$processor = new ProcessWhois($db);
+	else
+		return false;
 
-$pool = new Pool($threads);
-foreach($delegated_databases as $database){
-	$pool->submit(new ProcessDelegatedTask($database, $collector));
-}
-foreach($whois_databases as $database){
-	$pool->submit(new ProcessWhoisTask($database, $collector));
-}
-$pool->shutdown();
-print "End processing WHOIS data\n";
+	return save_processed($db, $processor->run());
+};
+
+if($THREAD_COUNT)
+	$pool = new TPool($THREAD_COUNT, 'boot.php');
+
+foreach($delegated_databases as $db)
+	if($THREAD_COUNT)
+		$pool->submit($process_db, [$db, 'delegated']);
+	elseif(!$process_db($db, 'delegated'))
+		exit(1);
+
+foreach($whois_databases as $db)
+	if($THREAD_COUNT)
+		$pool->submit($process_db, [$db, 'whois']);
+	elseif(!$process_db($db, 'whois'))
+		exit(1);
+
+if($THREAD_COUNT && $pool->shutdown())
+	foreach($pool->jobs as $job)
+		if(!$job->future->value())
+			exit(1);
+
+exit(0);

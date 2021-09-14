@@ -1,9 +1,10 @@
 <?php
 
-require_once('config.php');
-require_once('lib/console.inc.php');
-require_once('tree.php');
-require_once('IP2Country/CountryRangeDB.php');
+declare(strict_types = 1);
+
+require_once('boot.php');
+require_once('console.php');
+require_once('lib/tree.php');
 
 define('IP2C_DB_IDENT', 'IP2C');
 define('IP2C_DB_VERS_HI', 2);
