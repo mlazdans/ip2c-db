@@ -8,38 +8,6 @@ function dprint($msg) {
 	}
 }
 
-function save_file($id, $save_path){
-	$some_file = isset($_FILES[$id]) ? $_FILES[$id] : array();
-
-	if(!$some_file){
-		return false;
-	}
-
-	if(!($f_in = fopen($some_file['tmp_name'], 'r'))){
-		print "Cannot open uploaded file!";
-		return false;
-	}
-
-	if(!($f_out = fopen($save_path, 'w'))){
-		print "Cannot save uploaded file!";
-		fclose($f_in);
-		return false;
-	}
-
-	while(!feof($f_in)){
-		$ip = trim((string)fgets($f_in));
-		$line = ip2long($ip);
-		if(($line == '4294967295') || !$ip){
-			continue;
-		}
-		fputs($f_out, "$line\n");
-	}
-	fclose($f_in);
-	fclose($f_out);
-
-	return $some_file['type'];
-}
-
 function read_zip($f_name){
 	$tmp = tempnam('', 'ip2c');
 	if(!($f_out = fopen($tmp, 'w'))){
@@ -163,4 +131,39 @@ function download_db($db, $root){
 # https://stackoverflow.com/a/62248418/10973173
 function get_total_cpu_cores() {
 	return (int) ((PHP_OS_FAMILY == 'Windows')?(getenv("NUMBER_OF_PROCESSORS")+0):substr_count(file_get_contents("/proc/cpuinfo"),"processor"));
+}
+
+function country_rule($c){
+	$c = strtoupper(trim($c));
+	if($c == 'EU')
+		return false;
+	elseif($c == 'ZZ')
+		return false;
+	elseif($c == 'UNITED STATES')
+		return 'US';
+	else {
+		if(strlen($c) != 2)
+			trigger_error("Unexpected country ISO code ($c)", E_USER_WARNING);
+
+		return $c;
+	}
+}
+
+# https://stackoverflow.com/a/5858676/10973173
+function cidrToRange($cidr) {
+	$range = [];
+	$cidr = explode('/', $cidr);
+
+	# Fight 24.152.0/22
+	for($i = 0; $i < 4; $i++){
+		if($i0 = ip2long($cidr[0])){
+			$range[0] = $i0 & ((-1 << (32 - (int)$cidr[1])));
+			break;
+		}
+		$cidr[0] .= '.0';
+	}
+
+	$range[1] = $range[0] + pow(2, (32 - (int)$cidr[1])) - 1;
+
+	return $range;
 }
