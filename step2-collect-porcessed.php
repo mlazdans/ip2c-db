@@ -50,11 +50,10 @@ $countries = [];
 foreach($DATABASES as $database){
 	print "Loading: $database...";
 	$f = fopen($database, 'r');
-	while(!feof($f)){
-		if(preg_match("/(..),(.*)/", (string)fgets($f), $m)){
+	while($line = fgets($f))
+		if(preg_match("/(..),(.*)/", $line, $m))
 			$countries[$m[1]][] = $m[2];
-		}
-	}
+
 	fclose($f);
 	print "DONE\n";
 }

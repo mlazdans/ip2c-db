@@ -22,12 +22,15 @@ class ProcessDelegated {
 		$r = proc_open($commandLine, $descriptorspec, $pipes);
 
 		$data = [];
-		while(!feof($pipes[1])){
-			$parts = explode("|", trim((string)fgets($pipes[1])));
-			if(count($parts) < 7){
+		while($line = fgets($pipes[1])){
+			$parts = explode("|", trim($line));
+
+			if(count($parts) < 7)
 				continue;
-			}
-			$country = $parts[1];
+
+			if(!($country = country_rule($parts[1])))
+				continue;
+
 			$ipStart = ip2long($parts[3]);
 			$ipCount = $parts[4];
 			$ipEnd = $ipStart + $ipCount - 1;
