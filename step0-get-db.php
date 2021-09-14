@@ -57,12 +57,10 @@ if(!is_writable($ROOT)){
 	exit(1);
 }
 
-if(isset($O['t'])){
+$THREAD_COUNT = 0;
+if(isset($O['t']))
 	if(($THREAD_COUNT = (int)$O['t']) < 2)
-		usage();
-} else {
-	$THREAD_COUNT = 0;
-}
+		$THREAD_COUNT = 0;
 
 $dbs = [
 	'ftp://ftp.ripe.net/pub/stats/afrinic/delegated-afrinic-latest',

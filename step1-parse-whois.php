@@ -33,12 +33,10 @@ function usage(){
 if((empty($O['w']) && empty($O['d'])) || isset($O['h']))
 	usage();
 
-if(isset($O['t'])){
+$THREAD_COUNT = 0;
+if(isset($O['t']))
 	if(($THREAD_COUNT = (int)$O['t']) < 2)
-		usage();
-} else {
-	$THREAD_COUNT = 0;
-}
+		$THREAD_COUNT = 0;
 
 $whois_databases = isset($O['w']) ? $O['w'] : [];
 $delegated_databases = isset($O['d']) ? $O['d'] : [];
