@@ -5,15 +5,16 @@ declare(strict_types = 1);
 require_once('boot.php');
 require_once('console.php');
 
-$O = getopt("p:r:h");
+$O = getopt("p:r:t:h");
 
 function usage(){
 	global $argv;
 
 	print "\nUsage: $argv[0] -p <whoisdata_root> -r <output_folder> [-h]\n";
 	print "\n";
-	print "\t-p .processed WHOIS / delegated databases folder\n";
+	print "\t-p WHOIS / delegated .processed databases folder\n";
 	print "\t-r Output folder for ip2country files\n";
+	print "\t-t thread count (>1)\n";
 	print "\t-h Help\n";
 
 	exit(1);
@@ -40,6 +41,11 @@ if(!count($DATABASES)){
 	exit(1);
 }
 
+$THREAD_COUNT = 0;
+if(isset($O['t']))
+	if(($THREAD_COUNT = (int)$O['t']) < 2)
+		$THREAD_COUNT = 0;
+
 $countries = [];
 foreach($DATABASES as $database){
 	print "Loading: $database...";
@@ -53,16 +59,37 @@ foreach($DATABASES as $database){
 	print "DONE\n";
 }
 
+$CompactDB = function($output_dir, $iso, $data){
+	print "Start processing ($iso)\n";
+	$c = new RangeDB((string)$iso);
+
+	// $logger = new Logger;
+	// $logger->logn("Start processing ($iso)");
+	$c->load($data);
+	while($c->overlap());
+	// $logger->logTSn("Done processing ($iso) in ")->resetTS();
+
+	return $c->saveWithMerges("$output_dir$iso.db");
+};
+
 $output_dir = $OUTPUT_ROOT.DIRECTORY_SEPARATOR;
+
 delfiles("$output_dir*.db");
 
-print "Saving: $output_dir*.db...";
-foreach($countries as $iso=>$list){
-	$db = "$output_dir$iso.db";
-	$f = fopen($db, "w");
-	foreach($list as $range){
-		fputs($f, "$range\n");
-	}
-	fclose($f);
+if($THREAD_COUNT)
+	$pool = new TPool($THREAD_COUNT, 'boot.php');
+
+foreach($countries as $iso=>$ranges)
+	if($THREAD_COUNT)
+		$pool->submit($CompactDB, [$output_dir, $iso, $ranges]);
+	elseif(!$CompactDB($output_dir, $iso, $ranges))
+		exit(1);
+
+if($THREAD_COUNT){
+	$pool->shutdown();
+	foreach($pool->jobs as $job)
+		if(!$job->future->value())
+			exit(1);
 }
-print "DONE\n";
+
+exit(0);
