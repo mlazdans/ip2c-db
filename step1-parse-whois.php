@@ -42,23 +42,19 @@ $whois_databases = isset($O['w']) ? $O['w'] : [];
 $delegated_databases = isset($O['d']) ? $O['d'] : [];
 $output_database = isset($O['o']) ? $O['o'] : [];
 
-if(!is_array($whois_databases)){
+if(!is_array($whois_databases))
 	$whois_databases = [$whois_databases];
-}
 
-if(!is_array($delegated_databases)){
+if(!is_array($delegated_databases))
 	$delegated_databases = [$delegated_databases];
-}
 
-# $type = [delegated|whois]
 $process_db = function(string $db, string $type){
-	if($type == 'delegated'){
+	if($type == 'delegated')
 		$processor = new ProcessDelegated($db);
-	} elseif($type == 'whois'){
+	elseif($type == 'whois')
 		$processor = new ProcessWhois($db);
-	} else {
+	else
 		return false;
-	}
 
 	return save_processed($db, $processor->run());
 };
@@ -66,25 +62,21 @@ $process_db = function(string $db, string $type){
 if($THREAD_COUNT)
 	$pool = new TPool($THREAD_COUNT, 'boot.php');
 
-foreach($delegated_databases as $db){
+foreach($delegated_databases as $db)
 	if($THREAD_COUNT)
 		$pool->submit($process_db, [$db, 'delegated']);
 	elseif(!$process_db($db, 'delegated'))
 		exit(1);
-}
 
-foreach($whois_databases as $db){
+foreach($whois_databases as $db)
 	if($THREAD_COUNT)
 		$pool->submit($process_db, [$db, 'whois']);
 	elseif(!$process_db($db, 'whois'))
 		exit(1);
-}
 
-if($THREAD_COUNT){
-	$pool->shutdown();
+if($THREAD_COUNT && $pool->shutdown())
 	foreach($pool->jobs as $job)
 		if(!$job->future->value())
 			exit(1);
-}
 
 exit(0);
