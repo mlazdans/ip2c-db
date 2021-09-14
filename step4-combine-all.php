@@ -62,6 +62,8 @@ print "Sorting...";
 $db->sort();
 print "DONE\n";
 
-print "Saving all.db...";
+print "Saving $COMBINED...";
 $db->save($COMBINED);
 print "DONE\n";
+
+exit(0);
