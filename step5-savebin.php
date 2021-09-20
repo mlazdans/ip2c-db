@@ -8,7 +8,7 @@ require_once('lib/tree.php');
 
 define('IP2C_DB_IDENT', 'IP2C');
 define('IP2C_DB_VERS_HI', 2);
-define('IP2C_DB_VERS_LO', 0);
+define('IP2C_DB_VERS_LO', 1);
 
 $db = new CountryRangeDB("ALL");
 $db->load("combined.db");
