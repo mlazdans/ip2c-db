@@ -15,19 +15,17 @@ function print_item(&$data, $key){
 }
 
 $db = new CountryRangeDB("ALL");
-$db->load([
-	new CountryRange('LV', 1,2),
-	new CountryRange('LV', 1,9),
-	new CountryRange('LV', 1,10),
-	new CountryRange('LV', 2,2),
-	new CountryRange('LV', 3,4),
-	new CountryRange('LV', 5,6),
-	new CountryRange('LV', 6,6),
-	new CountryRange('LV', 7,8),
-]);
+$db->addRecord(new CountryRange('LV', 1,2));
+$db->addRecord(new CountryRange('LV', 1,9));
+$db->addRecord(new CountryRange('LV', 1,10));
+$db->addRecord(new CountryRange('LV', 2,2));
+$db->addRecord(new CountryRange('LV', 3,4));
+$db->addRecord(new CountryRange('LV', 5,6));
+$db->addRecord(new CountryRange('LV', 6,6));
+$db->addRecord(new CountryRange('LV', 7,8));
 
 $db->sort();
-$data = $db->ranges;
+$data = $db->getRanges();
 
 $root = build_tree($data, 0, count($data) - 1);
 
@@ -43,12 +41,12 @@ print_item($data, search_tree($data, $root, 2));
 
 ?>
 --EXPECT--
-LV,1,2
-LV,1,10
+LV,1,2,0
+LV,1,10,0
 Not found
 Not found
-LV,3,4
-LV,1,9
-LV,7,8
-LV,6,6
-LV,2,2
+LV,3,4,0
+LV,1,9,0
+LV,7,8,0
+LV,6,6,0
+LV,2,2,0

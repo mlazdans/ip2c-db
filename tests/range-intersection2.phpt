@@ -11,4 +11,4 @@ print $r1->intersection($r2);
 
 ?>
 --EXPECT--
-1,1
+1,1,0
