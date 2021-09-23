@@ -3,10 +3,11 @@
 declare(strict_types = 1);
 
 class RangeDB {
-	/** @var Range[] $ranges */
-	var $ranges = [];
 	var $name = '';
-	var $merges = 0;
+	/** @var Range[] $ranges */
+	protected iterable $ranges = [];
+	protected int $merges = 0;
+	protected int $recCount = 0;
 
 	function __construct(string $name) {
 		$this->name = $name;
@@ -25,8 +26,13 @@ class RangeDB {
 		$this->addRecord($r);
 	}
 
+	function getRanges(){
+		return $this->ranges;
+	}
+
 	function addRecord(Range $item){
 		$this->ranges[] = $item;
+		$this->recCount++;
 	}
 
 	function loadFile(string $file) {
@@ -54,31 +60,35 @@ class RangeDB {
 		return fclose($f);
 	}
 
-	function compact() {
-		$this->ranges = array_filter($this->ranges, function(Range $r){
-			return !$r->deleted;
-		});
-	}
+	// function compact() {
+	// 	$this->ranges = array_filter($this->ranges, function(Range $r){
+	// 		return !$r->deleted;
+	// 	});
+	// }
 
 	function sort($mode = "Start") {
-		if(!count($this->ranges))
-			return;
+		// if(!count($this->ranges))
+		// 	return;
 
+		# TODO: calssname
 		usort($this->ranges, [$this->ranges[0], "cmp$mode"]);
 	}
 
 	function equals($compact = true) {
 		$deleted = 0;
-		$i = count($this->ranges);
+		// $i = count($this->ranges);
+		$i = $this->recCount;
 
 		//print "Match from ($from:$d) at:\n";
 		$this->sort("Start");
 		for($r = 0; $r < $i - 1; $r++) {
-			if($this->ranges[$r]->deleted)
+			// if($this->ranges[$r]->deleted)
+			if(!isset($this->ranges[$r]))
 				continue;
 
 			for($t = $r + 1; $t < $i; $t++) {
-				if($this->ranges[$t]->deleted)
+				// if($this->ranges[$t]->deleted)
+				if(!isset($this->ranges[$t]))
 					continue;
 
 				$r1 = $this->ranges[$r];
@@ -94,12 +104,15 @@ class RangeDB {
 
 					if($r1->merges > $r2->merges){
 						print ", deleting $r2\n";
-						$this->ranges[$t]->delete();
+						// $this->ranges[$t]->delete();
+						unset($this->ranges[$t]);
 						$deleted++;
 					} elseif($r2->merges > $r1->merges){
 						print ", deleting $r1\n";
-						$this->ranges[$r]->delete();
+						// $this->ranges[$r]->delete();
+						unset($this->ranges[$r]);
 						$deleted++;
+						break;
 					} else {
 						print ", complete equal skipping!!!\n";
 					}
@@ -107,24 +120,27 @@ class RangeDB {
 			}
 		}
 
-		if($compact)
-			$this->compact();
+		// if($compact)
+		// 	$this->compact();
 
 		return $deleted;
 	}
 
 	function overlapopen($compact = true) {
 		$deleted = 0;
-		$i = count($this->ranges);
+		// $i = count($this->ranges);
+		$i = $this->recCount;
 
 		//print "Match from ($from:$d) at:\n";
 		$this->sort("Start");
 		for($r = 0; $r < $i - 1; $r++) {
-			if($this->ranges[$r]->deleted)
+			// if($this->ranges[$r]->deleted)
+			if(!isset($this->ranges[$r]))
 				continue;
 
 			for($t = $r + 1; $t < $i; $t++) {
-				if($this->ranges[$t]->deleted)
+				// if($this->ranges[$t]->deleted)
+				if(!isset($this->ranges[$t]))
 					continue;
 
 				$r1 = $this->ranges[$r];
@@ -141,8 +157,8 @@ class RangeDB {
 			}
 		}
 
-		if($compact)
-			$this->compact();
+		// if($compact)
+		// 	$this->compact();
 
 		return $deleted;
 	}
@@ -150,21 +166,25 @@ class RangeDB {
 	function overlap($compact = true) {
 		$deleted = 0;
 
-		$i = count($this->ranges);
+		// $i = count($this->ranges);
+		$i = $this->recCount;
 
 		$this->sort("Start");
 		for($r = 0; $r < $i - 1; $r++) {
-			if($this->ranges[$r]->deleted)
+			// if($this->ranges[$r]->deleted)
+			if(!isset($this->ranges[$r]))
 				continue;
 
 			for($t = $r + 1; $t < $i; $t++) {
-				if($this->ranges[$t]->deleted)
+				//if($this->ranges[$t]->deleted)
+				if(!isset($this->ranges[$t]))
 					continue;
 
 				if($this->ranges[$r]->doOverlapOrConnect($this->ranges[$t])){
 					$this->ranges[$r]->merges += $this->ranges[$t]->merges + 1;
 					$this->ranges[$r]->union($this->ranges[$t]);
-					$this->ranges[$t]->delete();
+					// $this->ranges[$t]->delete();
+					unset($this->ranges[$t]);
 					$deleted++;
 				} else {
 					# Sorted, so no more overlaps
@@ -173,8 +193,8 @@ class RangeDB {
 			}
 		}
 
-		if($compact)
-			$this->compact();
+		// if($compact)
+		// 	$this->compact();
 
 		return $deleted;
 	}
