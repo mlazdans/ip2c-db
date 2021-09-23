@@ -90,5 +90,3 @@ if($THREAD_COUNT){
 		if(!$job->future->value())
 			exit(1);
 }
-
-exit(0);

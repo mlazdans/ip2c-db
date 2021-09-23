@@ -81,5 +81,3 @@ if($THREAD_COUNT && $pool->shutdown())
 	foreach($pool->jobs as $job)
 		if(!$job->future->value())
 			exit(1);
-
-exit(0);

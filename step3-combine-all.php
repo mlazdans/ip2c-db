@@ -66,4 +66,3 @@ print "Saving $COMBINED...";
 $db->save($COMBINED);
 print "DONE\n";
 
-exit(0);
