@@ -11,7 +11,7 @@ define('IP2C_DB_VERS_HI', 2);
 define('IP2C_DB_VERS_LO', 1);
 
 $db = new CountryRangeDB("ALL");
-$db->load("combined.db");
+$db->loadFile("combined.db");
 
 $root = build_tree($db->ranges, 0, count($db->ranges) - 1);
 

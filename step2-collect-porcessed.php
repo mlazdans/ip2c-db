@@ -64,11 +64,11 @@ $CompactDB = function($output_dir, $iso, $data){
 
 	// $logger = new Logger;
 	// $logger->logn("Start processing ($iso)");
-	$c->load($data);
+	$c->loadArray($data);
 	while($c->overlap());
 	// $logger->logTSn("Done processing ($iso) in ")->resetTS();
 
-	return $c->saveWithMerges("$output_dir$iso.db");
+	return $c->save("$output_dir$iso.db");
 };
 
 $output_dir = $OUTPUT_ROOT.DIRECTORY_SEPARATOR;

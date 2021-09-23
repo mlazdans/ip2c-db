@@ -44,7 +44,7 @@ $db = new CountryRangeDB("all");
 foreach (glob($db_patt) as $filename) {
 	$iso = pathinfo($filename, PATHINFO_FILENAME);
 	$r = new RangeDB($iso);
-	$r->load($filename);
+	$r->loadFile($filename);
 	$db->copyFrom($r);
 	unset($r);
 }
