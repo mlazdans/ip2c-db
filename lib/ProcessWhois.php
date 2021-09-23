@@ -4,10 +4,11 @@ declare(strict_types = 1);
 
 class ProcessWhois {
 	private $db;
-	private $data = [];
+	private CountryRangeDB $data;
 
 	public function __construct($db){
 		$this->db = $db;
+		$this->data = new CountryRangeDB($db);
 	}
 
 	function fetch_record($f){
@@ -46,7 +47,7 @@ class ProcessWhois {
 		return feof($f) && !$state ? false : $state;
 	}
 
-	public function run() {
+	public function run(): CountryRangeDB {
 		$logger = new Logger;
 		$logger->logn("Start processing ($this->db)");
 
@@ -111,7 +112,9 @@ class ProcessWhois {
 		if(!($c = country_rule($country)))
 			return;
 
-		$this->data[] = "$c,$ip_start_long,$ip_end_long";
+		// $this->data[] = "$c,$ip_start_long,$ip_end_long";
+		// $this->data[] = new CountryRange($c, $ip_start_long, $ip_end_long);
+		$this->data->addRecord(new CountryRange($c, $ip_start_long, $ip_end_long));
 
 		return true;
 	}

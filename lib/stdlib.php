@@ -93,16 +93,16 @@ function delfiles($pattern){
 	}
 }
 
-function save_processed($key, $data){
-	if($f = fopen("$key.processed", "w")){
-		foreach($data as $v)
-			fputs($f, "$v\n");
+// function save_processed($key, $data){
+// 	if($f = fopen("$key.processed", "w")){
+// 		foreach($data as $v)
+// 			fputs($f, "$v\n");
 
-		return fclose($f);
-	}
+// 		return fclose($f);
+// 	}
 
-	return false;
-}
+// 	return false;
+// }
 
 # TODO: logger
 function download_db($db, $root){

@@ -56,7 +56,8 @@ $process_db = function(string $db, string $type){
 	else
 		return false;
 
-	return save_processed($db, $processor->run());
+	$processor->run()->save("$db.processed");
+	// return save_processed($db, $processor->run());
 };
 
 if($THREAD_COUNT)
