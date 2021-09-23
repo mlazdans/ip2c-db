@@ -15,9 +15,6 @@ class CountryRange extends Range {
 	}
 
 	static function cmpCountryStart(CountryRange $r1, CountryRange $r2) {
-		// if($r1->deleted || $r2->deleted)
-		// 	return 0;
-		// else
-			return strcmp($r1->iso, $r2->iso);
+		return strcmp($r1->iso, $r2->iso);
 	}
 }

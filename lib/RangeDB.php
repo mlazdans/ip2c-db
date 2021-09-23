@@ -67,27 +67,19 @@ class RangeDB {
 	// }
 
 	function sort($mode = "Start") {
-		// if(!count($this->ranges))
-		// 	return;
-
-		# TODO: calssname
-		usort($this->ranges, [$this->ranges[0], "cmp$mode"]);
+		usort($this->ranges, ["Range", "cmp$mode"]);
 	}
 
 	function equals($compact = true) {
 		$deleted = 0;
-		// $i = count($this->ranges);
 		$i = $this->recCount;
 
-		//print "Match from ($from:$d) at:\n";
 		$this->sort("Start");
 		for($r = 0; $r < $i - 1; $r++) {
-			// if($this->ranges[$r]->deleted)
 			if(!isset($this->ranges[$r]))
 				continue;
 
 			for($t = $r + 1; $t < $i; $t++) {
-				// if($this->ranges[$t]->deleted)
 				if(!isset($this->ranges[$t]))
 					continue;
 
@@ -104,12 +96,10 @@ class RangeDB {
 
 					if($r1->merges > $r2->merges){
 						print ", deleting $r2\n";
-						// $this->ranges[$t]->delete();
 						unset($this->ranges[$t]);
 						$deleted++;
 					} elseif($r2->merges > $r1->merges){
 						print ", deleting $r1\n";
-						// $this->ranges[$r]->delete();
 						unset($this->ranges[$r]);
 						$deleted++;
 						break;
@@ -126,20 +116,17 @@ class RangeDB {
 		return $deleted;
 	}
 
+	# TODO: remove?
 	function overlapopen($compact = true) {
 		$deleted = 0;
-		// $i = count($this->ranges);
 		$i = $this->recCount;
 
-		//print "Match from ($from:$d) at:\n";
 		$this->sort("Start");
 		for($r = 0; $r < $i - 1; $r++) {
-			// if($this->ranges[$r]->deleted)
 			if(!isset($this->ranges[$r]))
 				continue;
 
 			for($t = $r + 1; $t < $i; $t++) {
-				// if($this->ranges[$t]->deleted)
 				if(!isset($this->ranges[$t]))
 					continue;
 
@@ -166,24 +153,20 @@ class RangeDB {
 	function overlap($compact = true) {
 		$deleted = 0;
 
-		// $i = count($this->ranges);
 		$i = $this->recCount;
 
 		$this->sort("Start");
 		for($r = 0; $r < $i - 1; $r++) {
-			// if($this->ranges[$r]->deleted)
 			if(!isset($this->ranges[$r]))
 				continue;
 
 			for($t = $r + 1; $t < $i; $t++) {
-				//if($this->ranges[$t]->deleted)
 				if(!isset($this->ranges[$t]))
 					continue;
 
 				if($this->ranges[$r]->doOverlapOrConnect($this->ranges[$t])){
 					$this->ranges[$r]->merges += $this->ranges[$t]->merges + 1;
 					$this->ranges[$r]->union($this->ranges[$t]);
-					// $this->ranges[$t]->delete();
 					unset($this->ranges[$t]);
 					$deleted++;
 				} else {

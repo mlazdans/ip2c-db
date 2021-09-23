@@ -7,7 +7,6 @@ class Range {
 	var int $end;
 	var int $interval;
 	var int $merges = 0;
-	// var bool $deleted = false;
 
 	function __construct(int $start, int $end, int $merges = 0) {
 		$this->start = $start;
@@ -19,14 +18,6 @@ class Range {
 	function __toString() {
 		return "$this->start,$this->end,$this->merges";
 	}
-
-	// function delete(){
-	// 	$this->deleted = true;
-	// }
-
-	// function isDeleted(){
-	// 	return $this->deleted;
-	// }
 
 	function isWithin(Range $r) {
 		return ($this->start >= $r->start) && ($this->end <= $r->end);
@@ -70,58 +61,42 @@ class Range {
 	}
 
 	static function cmpStartEnd(Range $r1, Range $r2) {
-		// if($r1->deleted || $r2->deleted)
-		// 	return 0;
 		if ($r1->start == $r2->end)
 			return 0;
 		else
-			return ($r1->start < $r2->end) ? 1 : -1;
+			return $r1->start < $r2->end ? 1 : -1;
 	}
 
 	static function cmpEndStart(Range $r1, Range $r2) {
-		// if($r1->deleted || $r2->deleted)
-		// 	return 0;
 		if ($r1->end == $r2->start)
 			return 0;
 		else
-			return ($r1->end > $r2->start) ? 1 : -1;
+			return $r1->end > $r2->start ? 1 : -1;
 	}
 
 	static function cmpStart(Range $r1, Range $r2) {
-		// if($r1->deleted || $r2->deleted)
-		// 	return 0;
 		if ($r1->start == $r2->start)
 			return Range::cmpEnd($r1, $r2);
 		else
-			return ($r1->start > $r2->start) ? 1 : -1;
+			return $r1->start > $r2->start ? 1 : -1;
 	}
 
 	static function cmpStartDesc(Range $r1, Range $r2) {
-		// if($r1->deleted || $r2->deleted)
-		// 	return 0;
-		// else
-			return Range::cmpStart($r1, $r2) * (-1);
+		return Range::cmpStart($r1, $r2) * -1;
 	}
 
 	static function cmpEndAsc(Range $r1, Range $r2) {
-		// if($r1->deleted || $r2->deleted)
-		// 	return 0;
-		// else
-			return Range::cmpEnd($r1, $r2) * (-1);
+		return Range::cmpEnd($r1, $r2) * -1;
 	}
 
 	static function cmpInterval(Range $r1, Range $r2) {
-		// if($r1->deleted || $r2->deleted)
-		// 	return 0;
 		if ($r1->interval == $r2->interval)
 			return Range::cmpStart($r1, $r2);
 		else
-			return ($r1->interval < $r2->interval) ? 1 : -1;
+			return $r1->interval < $r2->interval ? 1 : -1;
 	}
 
 	static function cmpStartInterval(Range $r1, Range $r2) {
-		// if($r1->deleted || $r2->deleted)
-		// 	return 0;
 		if ($r1->start == $r2->start)
 			return Range::cmpInterval($r1, $r2);
 		else
@@ -129,8 +104,6 @@ class Range {
 	}
 
 	static function cmpEnd(Range $r1, Range $r2) {
-		// if($r1->deleted || $r2->deleted)
-		// 	return 0;
 		if ($r1->end == $r2->end)
 			return 0;
 		else
@@ -138,9 +111,6 @@ class Range {
 	}
 
 	static function cmpEndDesc(Range $r1, Range $r2) {
-		// if($r1->deleted || $r2->deleted)
-		// 	return 0;
-		// else
-			return Range::cmpEnd($r1, $r2) * (-1);
+		return Range::cmpEnd($r1, $r2) * -1;
 	}
 }
