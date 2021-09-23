@@ -6,7 +6,7 @@ function build_tree(&$data, $floor, $ceil){
 	if($floor > $ceil)
 		return null;
 
-	$mid = (int)(floor($floor + $ceil) / 2);
+	$mid = floor(($floor + $ceil) / 2);
 	//print "\$floor=$floor; \$ceil=$ceil, mid=$mid\n";
 	$root = new CountryRangeTreeNode($data, $mid);
 	$root->right = build_tree($data, $mid + 1, $ceil);
