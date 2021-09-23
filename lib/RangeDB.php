@@ -4,43 +4,49 @@ declare(strict_types = 1);
 
 class RangeDB {
 	/** @var Range[] $ranges */
-	var $ranges;
-
-	var $deleted = 0;
+	var $ranges = [];
 	var $name = '';
+	var $merges = 0;
 
 	function __construct(string $name) {
 		$this->name = $name;
-		$this->ranges = [];
 	}
 
 	function __toString() {
 		return $this->name;
 	}
 
-	protected function __addLine($line){
-		$parts = preg_split('/[,\s]/', trim((string)$line));
-		list($start, $end) = $parts;
+	protected function addLine(string $line){
+		$parts = preg_split('/[,\s]/', trim($line));
+		list($start, $end, $merges) = $parts;
 
-		$r = new Range($start, $end);
-		if(count($parts) > 2)
-			$r->merges = $parts[2];
+		$r = new Range((int)$start, (int)$end, (int)$merges);
+		// if(isset($parts[2]))
+		// 	$r->merges = $parts[2];
 
-		$this->ranges[] = $r;
+		$this->addRecord($r);
 	}
 
-	protected function __load($item){
-		if($item instanceof Range)
-			$this->ranges[] = $item;
-		elseif(is_array($item) || $item instanceof Ds\Sequence)
-			$this->loadFromArray($item);
-		else
-			$this->loadFromFile($item);
-
-		return count($this->ranges);
+	function addRecord(Range $item){
+		$this->ranges[] = $item;
 	}
 
-	function save($file) {
+	function loadFile(string $file) {
+		if(($f = fopen($file, "r")) === false)
+			return false;
+
+		while($line = fgets($f))
+			$this->addLine($line);
+
+		return fclose($f);
+	}
+
+	function loadArray(iterable $lines) {
+		foreach($lines as $line)
+			$this->addLine($line);
+	}
+
+	function save(string $file) {
 		if(($f = fopen($file, "w")) === false)
 			return false;
 
@@ -50,52 +56,10 @@ class RangeDB {
 		return fclose($f);
 	}
 
-	function getWithMerges() {
-		foreach($this->ranges as $Range)
-			yield "$Range,$Range->merges";
-	}
-
-	function saveWithMerges($file) {
-		if(($f = fopen($file, "w")) === false)
-			return false;
-
-		foreach($this->getWithMerges() as $line)
-			fputs($f, "$line\n");
-
-		return fclose($f);
-	}
-
-	function append($item) {
-		return $this->__load($item);
-	}
-
-	function load($item) {
-		$this->deleted = 0;
-		$this->ranges = [];
-
-		return $this->__load($item);
-	}
-
-	protected function loadFromFile($file) {
-		if(($f = fopen($file, "r")) === false)
-			return false;
-
-		while($line = fgets($f))
-			$this->__addLine($line);
-
-		return fclose($f);
-	}
-
-	protected function loadFromArray($lines) {
-		foreach($lines as $line)
-			$this->__addLine($line);
-	}
-
 	function compact() {
-		$this->ranges = array_filter($this->ranges, function(Range $value){
-			return !$value->deleted;
+		$this->ranges = array_filter($this->ranges, function(Range $r){
+			return !$r->deleted;
 		});
-		$this->deleted = 0;
 	}
 
 	function sort($mode = "Start") {
@@ -133,12 +97,10 @@ class RangeDB {
 					if($r1->merges > $r2->merges){
 						print ", deleting $r2\n";
 						$this->ranges[$t]->delete();
-						$this->deleted++;
 						$deleted++;
 					} elseif($r2->merges > $r1->merges){
 						print ", deleting $r1\n";
 						$this->ranges[$r]->delete();
-						$this->deleted++;
 						$deleted++;
 					} else {
 						print ", complete equal skipping!!!\n";
@@ -205,7 +167,6 @@ class RangeDB {
 					$this->ranges[$r]->merges += $this->ranges[$t]->merges + 1;
 					$this->ranges[$r]->union($this->ranges[$t]);
 					$this->ranges[$t]->delete();
-					$this->deleted++;
 					$deleted++;
 				} else {
 					# Sorted, so no more overlaps

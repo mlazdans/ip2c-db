@@ -3,21 +3,21 @@
 declare(strict_types = 1);
 
 class Range {
-	var $start;
-	var $end;
-	var $interval;
-	var $merges = 0;
-	var $deleted = false;
+	var int $start;
+	var int $end;
+	var int $interval;
+	var int $merges = 0;
+	var bool $deleted = false;
 
-	# NOTE: 64-bit system needed for (int) to work correctly, can leave as string too
-	function __construct($start, $end) {
-		$this->start = (int)$start;
-		$this->end = (int)$end;
+	function __construct(int $start, int $end, int $merges = 0) {
+		$this->start = $start;
+		$this->end = $end;
+		$this->merges = $merges;
 		$this->interval = $this->end - $this->start;
 	}
 
 	function __toString() {
-		return "$this->start,$this->end";
+		return "$this->start,$this->end,$this->merges";
 	}
 
 	function delete(){
@@ -69,17 +69,7 @@ class Range {
 		$this->interval = $this->end - $this->start;
 	}
 
-	static function __deleted(Range ...$args){
-		$deleted = false;
-		foreach($args as $arg)
-			if($deleted = $deleted || $arg->deleted)
-				break;
-
-		return $deleted;
-	}
-
 	static function cmpStartEnd(Range $r1, Range $r2) {
-		# TODO: to all compares!!!
 		if($r1->deleted || $r2->deleted)
 			return 0;
 		elseif ($r1->start == $r2->end)

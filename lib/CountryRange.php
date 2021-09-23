@@ -3,15 +3,15 @@
 declare(strict_types = 1);
 
 class CountryRange extends Range {
-	var $iso;
+	var string $iso;
 
-	function __construct($iso, $start, $end){
-		parent::__construct($start, $end);
+	function __construct(string $iso, int $start, int $end, int $merges = 0){
+		parent::__construct($start, $end, $merges);
 		$this->iso = $iso;
 	}
 
 	function __toString() {
-		return "$this->iso,$this->start,$this->end";
+		return "$this->iso,".parent::__toString();
 	}
 
 	static function cmpCountryStart(CountryRange $r1, CountryRange $r2) {
@@ -19,9 +19,5 @@ class CountryRange extends Range {
 			return 0;
 		else
 			return strcmp($r1->iso, $r2->iso);
-		// if ($r1->iso == $r2->iso) {
-		// 		return 0;
-		// }
-		// return ($r1->iso < $r2->iso) ? 1 : -1;
 	}
 }
