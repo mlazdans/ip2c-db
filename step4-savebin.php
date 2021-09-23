@@ -32,7 +32,7 @@ fwrite($f, pack($format,
 ));
 
 foreach($ranges as $r)
-	fwrite($f, pack("VVa4", $r->start, $r->end, $r->iso)); # NOTE: a4 to align C struct
+	fwrite($f, pack("VVa4", $r->start, $r->end, $r->iso)); # a4 to align C struct
 
 fclose($f);
 
