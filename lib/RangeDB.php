@@ -3,13 +3,15 @@
 declare(strict_types = 1);
 
 class RangeDB {
+	/** @var Range[] $ranges */
 	var $ranges;
+
 	var $deleted = 0;
 	var $name = '';
 
 	function __construct(string $name) {
 		$this->name = $name;
-		$this->ranges = new \Ds\Vector;
+		$this->ranges = [];
 	}
 
 	function __toString() {
@@ -69,7 +71,7 @@ class RangeDB {
 
 	function load($item) {
 		$this->deleted = 0;
-		$this->ranges->clear();
+		$this->ranges = [];
 
 		return $this->__load($item);
 	}
@@ -90,7 +92,7 @@ class RangeDB {
 	}
 
 	function compact() {
-		$this->ranges = $this->ranges->filter(function($value){
+		$this->ranges = array_filter($this->ranges, function(Range $value){
 			return !$value->deleted;
 		});
 		$this->deleted = 0;
@@ -100,7 +102,7 @@ class RangeDB {
 		if(!count($this->ranges))
 			return;
 
-		$this->ranges->sort(array(get_class($this->ranges[0]), "cmp$mode"));
+		usort($this->ranges, [$this->ranges[0], "cmp$mode"]);
 	}
 
 	function equals($compact = true) {

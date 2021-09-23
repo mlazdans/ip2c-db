@@ -3,28 +3,28 @@
 <?php
 
 require_once("../boot.php");
-require_once('lib/stdlib.php');
-require_once('lib/tree.php');
+require_once('stdlib.php');
+require_once('tree.php');
 
 function print_item(&$data, $key){
-  if($key !== FALSE){
-    print $data[$key]."\n";
-  } else {
-    print "Not found\n";
-  }
+	if($key !== FALSE){
+		print $data[$key]."\n";
+	} else {
+		print "Not found\n";
+	}
 }
 
 $db = new CountryRangeDB("ALL");
-$db->load(new \Ds\Vector(array(
-  new CountryRange('LV', 1,2),
-  new CountryRange('LV', 1,9),
-  new CountryRange('LV', 1,10),
-  new CountryRange('LV', 2,2),
-  new CountryRange('LV', 3,4),
-  new CountryRange('LV', 5,6),
-  new CountryRange('LV', 6,6),
-  new CountryRange('LV', 7,8),
-)));
+$db->load([
+	new CountryRange('LV', 1,2),
+	new CountryRange('LV', 1,9),
+	new CountryRange('LV', 1,10),
+	new CountryRange('LV', 2,2),
+	new CountryRange('LV', 3,4),
+	new CountryRange('LV', 5,6),
+	new CountryRange('LV', 6,6),
+	new CountryRange('LV', 7,8),
+]);
 
 $db->sort();
 $data = $db->ranges;
