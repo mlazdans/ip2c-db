@@ -21,8 +21,6 @@ class RangeDB {
 		list($start, $end, $merges) = $parts;
 
 		$r = new Range((int)$start, (int)$end, (int)$merges);
-		// if(isset($parts[2]))
-		// 	$r->merges = $parts[2];
 
 		$this->addRecord($r);
 	}
