@@ -13,9 +13,11 @@ define('IP2C_DB_VERS_LO', 1);
 $db = new CountryRangeDB("ALL");
 $db->loadFile("combined.db");
 
-$root = build_tree($db->ranges, 0, count($db->ranges) - 1);
+$ranges = $db->getRanges();
+$rec_count = count($ranges);
 
-$rec_count = count($db->ranges);
+$root = build_tree($ranges, 0, $rec_count - 1);
+
 $ip_count = $root->max - $root->min + 2; // 2=including range ends
 
 $f = fopen('ip2c2-'.date('Ymd').'.db', 'wb');
@@ -28,9 +30,10 @@ fwrite($f, pack($format,
 	$rec_count,
 	$ip_count
 ));
-foreach($db->ranges as $r){
+
+foreach($ranges as $r)
 	fwrite($f, pack("VVa4", $r->start, $r->end, $r->iso)); # NOTE: a4 to align C struct
-}
+
 fclose($f);
 
 printf("Database version: %s %d.%d, %d records, %d IPs covered",
