@@ -34,9 +34,16 @@ class ProcessDelegated {
 			$ipStart = ip2long($parts[3]);
 			$ipCount = (int)$parts[4];
 			$ipEnd = $ipStart + $ipCount - 1;
-			// $data[] = "$country,$ipStart,$ipEnd";
-			// $data[] = new CountryRange($country, $ipStart, $ipEnd);
-			$data->addRecord(new CountryRange($country, $ipStart, $ipEnd));
+
+			$s = $parts[6];
+			if($s == 'assigned')
+				$status = Range::STATUS_ASSIGNED;
+			elseif($s == 'allocated')
+				$status = Range::STATUS_ALLOCATED;
+			else
+				$status = 0;
+
+			$data->addRecord(new CountryRange($country, $ipStart, $ipEnd, 0, Range::SOURCE_STATS, $status));
 		}
 		proc_close($r);
 

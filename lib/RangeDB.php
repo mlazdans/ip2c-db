@@ -19,9 +19,9 @@ class RangeDB {
 
 	protected function addLine(string $line){
 		$parts = preg_split('/[,\s]/', trim($line));
-		list($start, $end, $merges) = $parts;
+		list($start, $end, $merges, $source, $status) = $parts;
 
-		$r = new Range((int)$start, (int)$end, (int)$merges);
+		$r = new Range((int)$start, (int)$end, (int)$merges, (int)$source, (int)$status);
 
 		$this->addRecord($r);
 	}

@@ -5,8 +5,8 @@ declare(strict_types = 1);
 class CountryRange extends Range {
 	var string $iso;
 
-	function __construct(string $iso, int $start, int $end, int $merges = 0){
-		parent::__construct($start, $end, $merges);
+	function __construct(string $iso, int $start, int $end, int $merges, int $source, int $status){
+		parent::__construct($start, $end, $merges, $source, $status);
 		$this->iso = $iso;
 	}
 

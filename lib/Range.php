@@ -3,20 +3,32 @@
 declare(strict_types = 1);
 
 class Range {
+	const STATUS_ALLOCATED       = 1;
+	const STATUS_ASSIGNED        = 2;
+	const STATUS_REALLOCATED     = 3;
+	const STATUS_REASSIGNED      = 4;
+
+	const SOURCE_INETNUM         = 1;
+	const SOURCE_STATS           = 2;
+
 	var int $start;
 	var int $end;
 	var int $interval;
-	var int $merges = 0;
+	var int $merges;
+	var int $status;
+	var int $source;
 
-	function __construct(int $start, int $end, int $merges = 0) {
+	function __construct(int $start, int $end, int $merges, int $source, int $status) {
 		$this->start = $start;
 		$this->end = $end;
 		$this->merges = $merges;
+		$this->source = $source;
+		$this->status = $status;
 		$this->interval = $this->end - $this->start;
 	}
 
 	function __toString() {
-		return "$this->start,$this->end,$this->merges";
+		return "$this->start,$this->end,$this->merges,$this->source,$this->status";
 	}
 
 	function isWithin(Range $r) {

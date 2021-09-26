@@ -112,9 +112,20 @@ class ProcessWhois {
 		if(!($c = country_rule($country)))
 			return;
 
-		// $this->data[] = "$c,$ip_start_long,$ip_end_long";
-		// $this->data[] = new CountryRange($c, $ip_start_long, $ip_end_long);
-		$this->data->addRecord(new CountryRange($c, $ip_start_long, $ip_end_long));
+		$status = 0;
+		if(isset($record['status'])){
+			$s = strtoupper($record['status']);
+			if($s == 'REASSIGNED')
+				$status = Range::STATUS_REASSIGNED;
+			elseif($s == 'REALLOCATED')
+				$status = Range::STATUS_REALLOCATED;
+			elseif(preg_match("/ASSIGNED/", $s))
+				$status = Range::STATUS_ASSIGNED;
+			elseif(preg_match("/ALLOCATED/", $s))
+				$status = Range::STATUS_ALLOCATED;
+		}
+
+		$this->data->addRecord(new CountryRange($c, $ip_start_long, $ip_end_long, 0, Range::SOURCE_INETNUM, $status));
 
 		return true;
 	}
