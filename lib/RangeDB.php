@@ -66,15 +66,15 @@ class RangeDB {
 	// 	});
 	// }
 
-	function sort($mode = "Start") {
-		usort($this->ranges, ["Range", "cmp$mode"]);
+	function sort(string $cmpFunction) {
+		usort($this->ranges, ["Range", $cmpFunction]);
 	}
 
-	function equals($compact = true) {
+	function equals() {
 		$deleted = 0;
 		$i = $this->recCount;
 
-		$this->sort("Start");
+		$this->sort("cmpStart");
 		for($r = 0; $r < $i - 1; $r++) {
 			if(!isset($this->ranges[$r]))
 				continue;
@@ -110,18 +110,15 @@ class RangeDB {
 			}
 		}
 
-		// if($compact)
-		// 	$this->compact();
-
 		return $deleted;
 	}
 
 	# TODO: remove?
-	function overlapopen($compact = true) {
+	function overlapopen() {
 		$deleted = 0;
 		$i = $this->recCount;
 
-		$this->sort("Start");
+		$this->sort("cmpStart");
 		for($r = 0; $r < $i - 1; $r++) {
 			if(!isset($this->ranges[$r]))
 				continue;
@@ -144,18 +141,15 @@ class RangeDB {
 			}
 		}
 
-		// if($compact)
-		// 	$this->compact();
-
 		return $deleted;
 	}
 
-	function overlap($compact = true) {
+	function overlap() {
 		$deleted = 0;
 
 		$i = $this->recCount;
 
-		$this->sort("Start");
+		$this->sort("cmpStart");
 		for($r = 0; $r < $i - 1; $r++) {
 			if(!isset($this->ranges[$r]))
 				continue;
@@ -175,9 +169,6 @@ class RangeDB {
 				}
 			}
 		}
-
-		// if($compact)
-		// 	$this->compact();
 
 		return $deleted;
 	}

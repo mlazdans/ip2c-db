@@ -24,7 +24,7 @@ $db->addRecord(new CountryRange('LV', 5,6));
 $db->addRecord(new CountryRange('LV', 6,6));
 $db->addRecord(new CountryRange('LV', 7,8));
 
-$db->sort();
+$db->sort("cmpStart");
 $data = $db->getRanges();
 
 $root = build_tree($data, 0, count($data) - 1);

@@ -59,7 +59,7 @@ $db->overlapopen();
 print "DONE\n";
 
 print "Sorting...";
-$db->sort();
+$db->sort("cmpStart");
 print "DONE\n";
 
 print "Saving $COMBINED...";
